@@ -1,0 +1,168 @@
+---
+title: "R4 MARTINEZ"
+author: "Martinez Francisco"
+date: "11/12/2020"
+output:
+  html_document:
+  toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  fig.path = "results/figs/",
+  dev = "png",
+  dpi = 100)
+            
+
+
+```
+
+# Exercice 1. 
+For the data InsectSpray, make a table for the number of insects for each spray with the mean, median and standard error. Note: Remember to use knitr::kable(), or a similar function to print the table with its caption.
+
+
+```{r}
+me <- med <- se <- In <- numeric()
+sp <- character()
+
+for(i in levels(InsectSprays$spray)){   #i is a random value given to the spray column.
+  for(j in names(InsectSprays)[-2]){    #j is a random value given to the count column.
+    
+    sp <-c(sp,i)                   # vector that allows to go through the values related to the levels of spray.
+    
+    x <- InsectSprays[InsectSprays$spray ==i,j]   
+    me <- round(c(me, mean(x)), 2)
+    se <- round(c(se, sd(x) / sqrt(length(x))),2)
+    med <- c(med, median(x))
+    In <- c(In, sum(x))
+    
+  }
+}
+
+d <- data.frame(Spray  = sp,
+                Insects_count = In,
+                Mean = me,
+                Standarderror = se,
+                Median = med)
+knitr::kable(d <- data.frame(Spray  = sp,
+                Insects_count = In,
+                Mean = me,
+                Standarderror = se,
+                Median = med)
+, caption = "Table 1. The effect of spray on insect count")
+
+```
+# Exercice 2. Print a plot to see the differences of counts between sprays. 
+#Include a caption explaining the figure. Which type of plot is the one you choose and why?
+
+```{r, fig.cap="Figure 1. Effect of different sprays on insect count"}
+boxplot(count ~ spray, data = InsectSprays)
+title(main="Figure 1. Effect of different sprays on insect count")
+```
+# Answer: I choosed boxplot because we can see the median,max and min values and the diversity of our data.
+
+
+# Exercice 3. Test for differences between sprays using anova and a posthoc comparison.
+
+```{r}
+res.aov <- aov(count ~ spray, data = InsectSprays)
+summary(res.aov)
+tukey.test <- TukeyHSD(res.aov)
+print(tukey.test)
+
+```
+## install packages: agricolae
+```{r}
+library(agricolae)
+letter_test <- HSD.test(res.aov, "spray")
+letter_test
+
+```
+## Redo the previous plot including the representation of all posthoc differences.
+```{r, fig.cap="Figure 2. Posthoc differences after a direct anova test"}
+plot(count ~ spray, data = InsectSprays, ylim = c(0,30))
+text(x = 1:6, y = 29, c("a", "a", "b", "b", "b", "a"))
+title("Figure 2. Posthoc differences after a direct anova test")
+```
+
+## Exercice 4. Test for differences between sprays using non-parametric Kruskal-Wallis rank sum test. 
+## Again, redo the plot with these results. Use agricolae::kruskal().
+```{r, fig.cap="Figure 3. Differences between sprays using non-parametric Kruskal-Wallis"}
+
+krus <- kruskal(InsectSprays$count, InsectSprays$spray)
+print(krus)
+plot(count ~ spray, data = InsectSprays, ylim = c(0,30))
+text(x = 1:6, y = 29, c("a", "a", "c", "b", "bc", "a"))
+title("Figure 3. Differences between sprays using non-parametric Kruskal-Wallis")
+```
+# Answer: This analysis between treatment C and D proved that the difference is significant.
+
+## Exercice 5. Transform count data using sqrt(counts) and redo the anova, the Tukey posthoc comparison and the plot.
+
+#sqrt(counts) and redo the anova
+```{r}
+res.aov2 <- aov(sqrt(count) ~ spray, data = InsectSprays)
+summary(res.aov2)
+```
+#Tukey posthoc comparison and the plot.
+```{r, fig.cap="Figure 4. Tukey posthoc comparison"}
+tukey.test2 <- TukeyHSD(res.aov2)
+print(tukey.test2)
+plot(tukey.test2)
+```
+# Performing the agricolae test
+```{r}
+letter_test2 <- HSD.test(res.aov2, "spray")
+letter_test2
+```
+# putting up the plot
+```{r, fig.cap="Figure 5. Differences between sprays using Agricolae test"}
+plot(count ~ spray, data = InsectSprays, ylim = c(0,30))
+text(x = 1:6, y = 29, c("a", "a", "c", "b", "bc", "a"))
+title("Figure 5. Differences between sprays using Agricolae test")
+```
+
+## Exercice 6. Test for normality of residuals for the two performed anova analyses of points 4 and 6 using shapiro.test()
+
+# shapiro test for the 1 anova analysis
+```{r}
+shapiro.test(res.aov$residuals)
+
+```
+# conclusion: p < 0.05 => then the null hypothesis is rejected, there is no normality
+
+# shapiro test for the 2 anova analysis
+```{r}
+shapiro.test(res.aov2$residuals)
+
+```
+# conclusion: p > 0.05 => the null hypothesis is accepted, there is normality.
+
+# Use plot the anova to see the qqplots and compare them.
+```{r}
+qqnorm(res.aov$residuals, main = "QQplot for Direct anova")
+qqline(res.aov$residuals)
+
+qqnorm(res.aov2$residuals, main = "QQplot for square transformed anova")
+qqline(res.aov2$residuals)
+
+```
+# The square transformed anova is closer to normality than the first one. In fact, in the qqplot the points are closer to the line than in the qqplot for the direct anova.
+
+## Exercice 7. Which of the previous analysis is the adequate in this case? Why? 
+
+Previous analysis shown that square root anova is the adequate one. Because it facilitate the normality in transforming data.
+
+Compare to  direct anova it is more accurate in detecting significant differences between the treatments (e.g. C and D). 
+
+In addition,  Kruskal-Wallis analysis was said to be relevant as it showcase the same differences as the square root anova.
+
+### Is there any difference in the results between the square root transformed ANOVA and the Kruskal-Wallis analyses?
+No, there was no difference observed.
+
+### Is there any difference in the results between the direct ANOVA and the square root transformed ANOVA? Which ones?
+
+Yes, some sort of discrepancies observed.In the spray C and D case, the square root transformed anova appeared to be statistically different while on direct anova, otherwise.
+
+Moreover, there is no statistical difference between C and E, D and E for the both tests.

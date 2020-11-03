@@ -1,0 +1,21 @@
+---
+title: "lab 5"
+author: "Francisco Martinez"
+date: "11/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+  fig.path = "results",  
+  dev = "png",                  
+  dpi = 100                         
+)                      
+                      
+```
+
+# 1 For the data InsectSpray, make a table for the number of insects for each spray with the mean, median and standard error. Note: Remember to use knitr::kable(), or a similar function to print the table with its caption.
+```{r}
+knitr::kable(InsectSprays)
+```
+
